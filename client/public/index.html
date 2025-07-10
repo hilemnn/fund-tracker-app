@@ -12,6 +12,18 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Borç Takip Sistemi</title>
+    <script>
+      // SPA routing fix for production
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = sessionStorage.redirect || l.pathname;
+          sessionStorage.removeItem('redirect');
+          if (decoded !== l.pathname) {
+            history.replaceState(null, null, decoded);
+          }
+        }
+      }(window.location))
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

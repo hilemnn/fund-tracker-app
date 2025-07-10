@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Borç Takip Sistemi</title>
+    <script>
+      // SPA routing fallback
+      sessionStorage.redirect = location.pathname;
+      location.replace(location.origin + '/?/' + location.pathname.slice(1));
+    </script>
+  </head>
+  <body>
+    <div>Redirecting...</div>
+  </body>
+</html>

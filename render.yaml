@@ -11,7 +11,7 @@ services:
         - client/**
     routes:
       - type: rewrite
-        source: /*
+        source: "/*"
         destination: /index.html
     headers:
       - path: /*

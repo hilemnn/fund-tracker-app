@@ -11,13 +11,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 const corsOptions = {
-  origin: [
-    'http://localhost:3000', // Development
-    'https://fund-tracker-frontend.onrender.com', // Production Render Frontend
-    'https://your-app-name.netlify.app', // Netlify alternative
-    process.env.FRONTEND_URL // Environment variable
-  ],
-  credentials: true,
+  origin: '*', // Geçici olarak tüm origin'lere izin ver
+  credentials: false, // credentials ile * kullanılamaz
   optionsSuccessStatus: 200
 };
 
