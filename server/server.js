@@ -2,9 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const puppeteer = require('puppeteer');
 const cron = require('node-cron');
 require('dotenv').config();
+
+// Puppeteer için özel konfigürasyon
+let puppeteer;
+try {
+  // Production ortamında puppeteer-core kullan, development'da normal puppeteer
+  if (process.env.NODE_ENV === 'production') {
+    puppeteer = require('puppeteer-core');
+  } else {
+    puppeteer = require('puppeteer');
+  }
+} catch (error) {
+  console.error('Puppeteer import error:', error);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -140,12 +152,6 @@ async function fetchFundPrice(fundName) {
   try {
     console.log(`Fetching price for fund: ${fundName}`);
     
-    // Production ortamında puppeteer kullanmayı devre dışı bırak
-    if (process.env.NODE_ENV === 'production' || process.env.DISABLE_PUPPETEER === 'true') {
-      console.log('⚠️ Puppeteer disabled in production environment');
-      return '-';
-    }
-    
     // Fon adını URL formatına çevir (Türkçe karakterleri düzelt)
     const urlFundName = fundName
       .toLowerCase()
@@ -161,17 +167,37 @@ async function fetchFundPrice(fundName) {
     const url = `https://www.hangikredi.com/yatirim-araclari/fon/${urlFundName}`;
     console.log(`URL: ${url}`);
 
-    browser = await puppeteer.launch({ 
+    // Render.com için özel Puppeteer konfigürasyonu
+    const launchOptions = {
       headless: true,
       args: [
-        '--no-sandbox', 
+        '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        '--disable-features=VizDisplayCompositor',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-javascript',
+        '--disable-css',
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--disable-default-apps',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding'
       ]
-    });
+    };
+
+    // Production ortamında Chrome executable path belirt
+    if (process.env.NODE_ENV === 'production') {
+      // Render.com'da Chrome yolu
+      launchOptions.executablePath = process.env.CHROME_EXECUTABLE_PATH || '/opt/render/project/.render/chrome/opt/google/chrome/google-chrome';
+    }
+
+    browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     
     // User agent ayarla
@@ -194,9 +220,9 @@ async function fetchFundPrice(fundName) {
   } catch (error) {
     console.error(`Error fetching price for ${fundName}:`, error.message);
     
-    // Production ortamında varsayılan değer döndür
-    if (process.env.NODE_ENV === 'production' || error.message.includes('Chrome')) {
-      console.log('⚠️ Returning default price due to Chrome/Puppeteer issue');
+    // Genel hata durumunda varsayılan değer döndür
+    if (error.message.includes('Chrome') || error.message.includes('No usable sandbox')) {
+      console.log('⚠️ Chrome/Sandbox issue - returning default price');
       return '-';
     }
     
@@ -214,26 +240,34 @@ async function fetchStockPrice(stockCode) {
   try {
     console.log(`Fetching price for stock: ${stockCode}`);
     
-    // Production ortamında puppeteer kullanmayı devre dışı bırak
-    if (process.env.NODE_ENV === 'production' || process.env.DISABLE_PUPPETEER === 'true') {
-      console.log('⚠️ Puppeteer disabled in production environment');
-      return '-';
-    }
-    
     const url = 'https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/default.aspx';
     console.log(`URL: ${url}`);
 
-    browser = await puppeteer.launch({ 
+    // Render.com için özel Puppeteer konfigürasyonu
+    const launchOptions = {
       headless: true,
       args: [
-        '--no-sandbox', 
+        '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-web-security',
-        '--disable-features=VizDisplayCompositor'
+        '--disable-features=VizDisplayCompositor',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--no-first-run',
+        '--no-default-browser-check',
+        '--disable-default-apps'
       ]
-    });
+    };
+
+    // Production ortamında Chrome executable path belirt
+    if (process.env.NODE_ENV === 'production') {
+      launchOptions.executablePath = process.env.CHROME_EXECUTABLE_PATH || '/opt/render/project/.render/chrome/opt/google/chrome/google-chrome';
+    }
+
+    browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     
     // User agent ayarla
@@ -289,9 +323,9 @@ async function fetchStockPrice(stockCode) {
   } catch (error) {
     console.error(`Error fetching price for stock ${stockCode}:`, error.message);
     
-    // Production ortamında varsayılan değer döndür
-    if (process.env.NODE_ENV === 'production' || error.message.includes('Chrome')) {
-      console.log('⚠️ Returning default price due to Chrome/Puppeteer issue');
+    // Genel hata durumunda varsayılan değer döndür
+    if (error.message.includes('Chrome') || error.message.includes('No usable sandbox')) {
+      console.log('⚠️ Chrome/Sandbox issue - returning default price');
       return '-';
     }
     
@@ -308,24 +342,25 @@ async function updateAllFundPrices() {
   try {
     console.log('Starting fund and stock price update...');
     
-    // Production ortamında puppeteer kullanmayı atla
-    if (process.env.NODE_ENV === 'production' || process.env.DISABLE_PUPPETEER === 'true') {
-      console.log('⚠️ Price update skipped - Puppeteer disabled in production');
-      return { message: 'Price update skipped due to environment settings' };
-    }
-    
     // FON türündeki ürünleri güncelle
     const funds = await Fund.find({ type: 'FON' });
     console.log(`Found ${funds.length} funds to update`);
     
     for (const fund of funds) {
-      const price = await fetchFundPrice(fund.name);
-      if (price && price !== '-') {
-        await Fund.findByIdAndUpdate(fund._id, { price });
-        console.log(`Updated ${fund.name} price to ${price}`);
+      try {
+        const price = await fetchFundPrice(fund.name);
+        if (price && price !== '-' && price !== null) {
+          await Fund.findByIdAndUpdate(fund._id, { price });
+          console.log(`✅ Updated ${fund.name} price to ${price}`);
+        } else {
+          console.log(`⚠️ No price found for ${fund.name}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error updating ${fund.name}:`, error.message);
       }
-      // Rate limiting - 2 saniye bekle
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Rate limiting - 3 saniye bekle
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
     
     // HİSSE türündeki ürünleri güncelle
@@ -333,71 +368,66 @@ async function updateAllFundPrices() {
     console.log(`Found ${stocks.length} stocks to update`);
     
     for (const stock of stocks) {
-      const price = await fetchStockPrice(stock.name);
-      if (price && price !== '-') {
-        await Fund.findByIdAndUpdate(stock._id, { price });
-        console.log(`Updated ${stock.name} price to ${price}`);
+      try {
+        const price = await fetchStockPrice(stock.name);
+        if (price && price !== '-' && price !== null) {
+          await Fund.findByIdAndUpdate(stock._id, { price });
+          console.log(`✅ Updated ${stock.name} price to ${price}`);
+        } else {
+          console.log(`⚠️ No price found for ${stock.name}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error updating ${stock.name}:`, error.message);
       }
-      // Rate limiting - 3 saniye bekle (hisse için biraz daha uzun)
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Rate limiting - 4 saniye bekle (hisse için biraz daha uzun)
+      await new Promise(resolve => setTimeout(resolve, 4000));
     }
     
-    console.log('Fund and stock price update completed');
+    console.log('✅ Fund and stock price update completed');
+    return { success: true, message: 'Price update completed' };
   } catch (error) {
-    console.error('Error updating fund and stock prices:', error);
-    
-    // Chrome/Puppeteer hatası durumunda uyarı ver
-    if (error.message.includes('Chrome') || error.message.includes('puppeteer')) {
-      console.log('⚠️ Chrome/Puppeteer error detected - this is expected in production');
-    }
+    console.error('❌ Error updating fund and stock prices:', error);
+    return { success: false, error: error.message };
   }
 }
 
-// Cron job - Her gün saat 09:00'da çalış (sadece development ortamında)
-if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_PUPPETEER !== 'true') {
-  cron.schedule('0 9 * * *', () => {
-    console.log('Running scheduled fund and stock price update...');
-    updateAllFundPrices();
-  }, {
-    timezone: "Europe/Istanbul"
-  });
-  console.log('📅 Cron job scheduled for daily fund price updates at 09:00');
-} else {
-  console.log('⚠️ Cron job disabled - Production environment or Puppeteer disabled');
-}
+// Cron job - Her gün saat 09:00'da çalış
+cron.schedule('0 9 * * *', () => {
+  console.log('🕘 Running scheduled fund and stock price update...');
+  updateAllFundPrices();
+}, {
+  timezone: "Europe/Istanbul"
+});
+console.log('📅 Cron job scheduled for daily fund price updates at 09:00 Istanbul time');
 
 // Manuel güncelleme endpoint'i
 app.post('/api/update-fund-prices', async (req, res) => {
   try {
     console.log('📊 Manual fund price update requested');
     
-    // Production ortamında uyarı ver
-    if (process.env.NODE_ENV === 'production' || process.env.DISABLE_PUPPETEER === 'true') {
-      return res.json({ 
-        message: 'Fiyat güncelleme production ortamında devre dışı bırakıldı',
-        reason: 'Chrome/Puppeteer serverda mevcut değil',
-        status: 'disabled'
+    const result = await updateAllFundPrices();
+    
+    if (result.success) {
+      res.json({ 
+        message: 'Fon fiyatları güncelleme işlemi tamamlandı',
+        status: 'completed',
+        details: result.message
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Fon fiyatları güncellenirken hata oluştu',
+        status: 'error',
+        error: result.error
       });
     }
-    
-    await updateAllFundPrices();
-    res.json({ message: 'Fund prices update started', status: 'started' });
   } catch (error) {
     console.error('❌ Error updating fund prices:', error);
     
-    // Chrome hatası özel mesajı
-    if (error.message.includes('Chrome') || error.message.includes('puppeteer')) {
-      return res.status(503).json({ 
-        message: 'Fiyat güncelleme şu anda kullanılamıyor', 
-        error: 'Chrome browser gerekli ancak serverda mevcut değil',
-        status: 'chrome_unavailable'
-      });
-    }
-    
     res.status(500).json({ 
-      message: 'Error updating fund prices', 
+      message: 'Fon fiyatları güncellenirken server hatası oluştu', 
       error: error.message,
-      status: 'error'
+      status: 'server_error'
     });
   }
 });

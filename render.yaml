@@ -1,14 +1,40 @@
 services:
+  # Backend Service with Chrome Support
+  - type: web
+    name: fund-tracker-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: ./server
+    buildCommand: |
+      # Chrome ve bağımlılıklarını yükle
+      apt-get update
+      apt-get install -y wget gnupg ca-certificates apt-transport-https
+      wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -
+      echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+      apt-get update
+      apt-get install -y google-chrome-stable
+      npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CHROME_EXECUTABLE_PATH
+        value: /usr/bin/google-chrome-stable
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/google-chrome-stable
+      - key: MONGODB_URI
+        sync: false
+
   # Frontend Static Site
   - type: web
     name: fund-tracker-frontend
     env: static
+    rootDir: ./client
     buildCommand: npm install && npm run build
     staticPublishPath: ./build
     pullRequestPreviewsEnabled: false
-    buildFilter:
-      paths:
-        - client/**
     routes:
       - type: rewrite
         source: "/*"
@@ -24,4 +50,4 @@ services:
             value: nosniff
     envVars:
       - key: REACT_APP_API_URL
-        value: https://fund-tracker-backend.onrender.com
+        value: https://fund-tracker-app.onrender.com
