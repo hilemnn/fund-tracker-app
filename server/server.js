@@ -10,13 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-const corsOptions = {
-  origin: '*', // Geçici olarak tüm origin'lere izin ver
-  credentials: false, // credentials ile * kullanılamaz
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
+app.use(cors()); // Basit CORS - tüm origin'lere izin ver
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
