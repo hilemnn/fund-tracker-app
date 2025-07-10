@@ -167,6 +167,37 @@ async function fetchFundPrice(fundName) {
     const url = `https://www.hangikredi.com/yatirim-araclari/fon/${urlFundName}`;
     console.log(`URL: ${url}`);
 
+    // Render.com için Chrome executable path otomatik bulma
+    let executablePath = undefined;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Render.com'da Chrome yolları
+      const chromePaths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/opt/google/chrome/chrome',
+        '/opt/google/chrome/google-chrome',
+        '/snap/bin/chromium',
+        process.env.CHROME_EXECUTABLE_PATH,
+        process.env.PUPPETEER_EXECUTABLE_PATH
+      ];
+      
+      // Mevcut olan ilk Chrome yolunu bul
+      for (const path of chromePaths) {
+        if (path && require('fs').existsSync(path)) {
+          executablePath = path;
+          console.log(`Found Chrome at: ${path}`);
+          break;
+        }
+      }
+      
+      if (!executablePath) {
+        console.log('⚠️ Chrome not found, trying with default puppeteer');
+      }
+    }
+
     // Render.com için özel Puppeteer konfigürasyonu
     const launchOptions = {
       headless: true,
@@ -187,14 +218,15 @@ async function fetchFundPrice(fundName) {
         '--disable-default-apps',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding'
+        '--disable-renderer-backgrounding',
+        '--single-process',
+        '--no-zygote'
       ]
     };
 
-    // Production ortamında Chrome executable path belirt
-    if (process.env.NODE_ENV === 'production') {
-      // Render.com'da Chrome yolu
-      launchOptions.executablePath = process.env.CHROME_EXECUTABLE_PATH || '/opt/render/project/.render/chrome/opt/google/chrome/google-chrome';
+    // Eğer Chrome yolu bulunduysa ekle
+    if (executablePath) {
+      launchOptions.executablePath = executablePath;
     }
 
     browser = await puppeteer.launch(launchOptions);
@@ -220,16 +252,23 @@ async function fetchFundPrice(fundName) {
   } catch (error) {
     console.error(`Error fetching price for ${fundName}:`, error.message);
     
-    // Genel hata durumunda varsayılan değer döndür
-    if (error.message.includes('Chrome') || error.message.includes('No usable sandbox')) {
-      console.log('⚠️ Chrome/Sandbox issue - returning default price');
+    // Chrome bulunamadığında veya hata durumunda
+    if (error.message.includes('Browser was not found') || 
+        error.message.includes('Chrome') || 
+        error.message.includes('No usable sandbox') ||
+        error.message.includes('executable')) {
+      console.log(`⚠️ Chrome issue for ${fundName} - returning placeholder price`);
       return '-';
     }
     
     return null;
   } finally {
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch (e) {
+        console.log('Browser close error:', e.message);
+      }
     }
   }
 }
@@ -242,6 +281,37 @@ async function fetchStockPrice(stockCode) {
     
     const url = 'https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/default.aspx';
     console.log(`URL: ${url}`);
+
+    // Render.com için Chrome executable path otomatik bulma
+    let executablePath = undefined;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Render.com'da Chrome yolları
+      const chromePaths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/opt/google/chrome/chrome',
+        '/opt/google/chrome/google-chrome',
+        '/snap/bin/chromium',
+        process.env.CHROME_EXECUTABLE_PATH,
+        process.env.PUPPETEER_EXECUTABLE_PATH
+      ];
+      
+      // Mevcut olan ilk Chrome yolunu bul
+      for (const path of chromePaths) {
+        if (path && require('fs').existsSync(path)) {
+          executablePath = path;
+          console.log(`Found Chrome at: ${path}`);
+          break;
+        }
+      }
+      
+      if (!executablePath) {
+        console.log('⚠️ Chrome not found, trying with default puppeteer');
+      }
+    }
 
     // Render.com için özel Puppeteer konfigürasyonu
     const launchOptions = {
@@ -258,13 +328,15 @@ async function fetchStockPrice(stockCode) {
         '--disable-images',
         '--no-first-run',
         '--no-default-browser-check',
-        '--disable-default-apps'
+        '--disable-default-apps',
+        '--single-process',
+        '--no-zygote'
       ]
     };
 
-    // Production ortamında Chrome executable path belirt
-    if (process.env.NODE_ENV === 'production') {
-      launchOptions.executablePath = process.env.CHROME_EXECUTABLE_PATH || '/opt/render/project/.render/chrome/opt/google/chrome/google-chrome';
+    // Eğer Chrome yolu bulunduysa ekle
+    if (executablePath) {
+      launchOptions.executablePath = executablePath;
     }
 
     browser = await puppeteer.launch(launchOptions);
@@ -323,16 +395,23 @@ async function fetchStockPrice(stockCode) {
   } catch (error) {
     console.error(`Error fetching price for stock ${stockCode}:`, error.message);
     
-    // Genel hata durumunda varsayılan değer döndür
-    if (error.message.includes('Chrome') || error.message.includes('No usable sandbox')) {
-      console.log('⚠️ Chrome/Sandbox issue - returning default price');
+    // Chrome bulunamadığında veya hata durumunda
+    if (error.message.includes('Browser was not found') || 
+        error.message.includes('Chrome') || 
+        error.message.includes('No usable sandbox') ||
+        error.message.includes('executable')) {
+      console.log(`⚠️ Chrome issue for ${stockCode} - returning placeholder price`);
       return '-';
     }
     
     return null;
   } finally {
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch (e) {
+        console.log('Browser close error:', e.message);
+      }
     }
   }
 }
