@@ -5,18 +5,8 @@ const bodyParser = require('body-parser');
 const cron = require('node-cron');
 require('dotenv').config();
 
-// Puppeteer için özel konfigürasyon
-let puppeteer;
-try {
-  // Production ortamında puppeteer-core kullan, development'da normal puppeteer
-  if (process.env.NODE_ENV === 'production') {
-    puppeteer = require('puppeteer-core');
-  } else {
-    puppeteer = require('puppeteer');
-  }
-} catch (error) {
-  console.error('Puppeteer import error:', error);
-}
+// Puppeteer import - normal puppeteer kullan
+const puppeteer = require('puppeteer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -167,38 +157,7 @@ async function fetchFundPrice(fundName) {
     const url = `https://www.hangikredi.com/yatirim-araclari/fon/${urlFundName}`;
     console.log(`URL: ${url}`);
 
-    // Render.com için Chrome executable path otomatik bulma
-    let executablePath = undefined;
-    
-    if (process.env.NODE_ENV === 'production') {
-      // Render.com'da Chrome yolları
-      const chromePaths = [
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-        '/opt/google/chrome/chrome',
-        '/opt/google/chrome/google-chrome',
-        '/snap/bin/chromium',
-        process.env.CHROME_EXECUTABLE_PATH,
-        process.env.PUPPETEER_EXECUTABLE_PATH
-      ];
-      
-      // Mevcut olan ilk Chrome yolunu bul
-      for (const path of chromePaths) {
-        if (path && require('fs').existsSync(path)) {
-          executablePath = path;
-          console.log(`Found Chrome at: ${path}`);
-          break;
-        }
-      }
-      
-      if (!executablePath) {
-        console.log('⚠️ Chrome not found, trying with default puppeteer');
-      }
-    }
-
-    // Render.com için özel Puppeteer konfigürasyonu
+    // Puppeteer launch options
     const launchOptions = {
       headless: true,
       args: [
@@ -211,8 +170,6 @@ async function fetchFundPrice(fundName) {
         '--disable-extensions',
         '--disable-plugins',
         '--disable-images',
-        '--disable-javascript',
-        '--disable-css',
         '--no-first-run',
         '--no-default-browser-check',
         '--disable-default-apps',
@@ -224,9 +181,30 @@ async function fetchFundPrice(fundName) {
       ]
     };
 
-    // Eğer Chrome yolu bulunduysa ekle
-    if (executablePath) {
-      launchOptions.executablePath = executablePath;
+    // Production ortamında Chrome yolunu bulmaya çalış
+    if (process.env.NODE_ENV === 'production') {
+      const fs = require('fs');
+      const chromePaths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/opt/google/chrome/chrome',
+        '/opt/google/chrome/google-chrome',
+        '/snap/bin/chromium'
+      ];
+      
+      for (const path of chromePaths) {
+        if (fs.existsSync(path)) {
+          launchOptions.executablePath = path;
+          console.log(`Using Chrome at: ${path}`);
+          break;
+        }
+      }
+      
+      if (!launchOptions.executablePath) {
+        console.log('⚠️ Chrome not found at common paths, using default');
+      }
     }
 
     browser = await puppeteer.launch(launchOptions);
@@ -282,38 +260,7 @@ async function fetchStockPrice(stockCode) {
     const url = 'https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/default.aspx';
     console.log(`URL: ${url}`);
 
-    // Render.com için Chrome executable path otomatik bulma
-    let executablePath = undefined;
-    
-    if (process.env.NODE_ENV === 'production') {
-      // Render.com'da Chrome yolları
-      const chromePaths = [
-        '/usr/bin/google-chrome-stable',
-        '/usr/bin/google-chrome',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/chromium',
-        '/opt/google/chrome/chrome',
-        '/opt/google/chrome/google-chrome',
-        '/snap/bin/chromium',
-        process.env.CHROME_EXECUTABLE_PATH,
-        process.env.PUPPETEER_EXECUTABLE_PATH
-      ];
-      
-      // Mevcut olan ilk Chrome yolunu bul
-      for (const path of chromePaths) {
-        if (path && require('fs').existsSync(path)) {
-          executablePath = path;
-          console.log(`Found Chrome at: ${path}`);
-          break;
-        }
-      }
-      
-      if (!executablePath) {
-        console.log('⚠️ Chrome not found, trying with default puppeteer');
-      }
-    }
-
-    // Render.com için özel Puppeteer konfigürasyonu
+    // Puppeteer launch options
     const launchOptions = {
       headless: true,
       args: [
@@ -334,9 +281,30 @@ async function fetchStockPrice(stockCode) {
       ]
     };
 
-    // Eğer Chrome yolu bulunduysa ekle
-    if (executablePath) {
-      launchOptions.executablePath = executablePath;
+    // Production ortamında Chrome yolunu bulmaya çalış
+    if (process.env.NODE_ENV === 'production') {
+      const fs = require('fs');
+      const chromePaths = [
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        '/opt/google/chrome/chrome',
+        '/opt/google/chrome/google-chrome',
+        '/snap/bin/chromium'
+      ];
+      
+      for (const path of chromePaths) {
+        if (fs.existsSync(path)) {
+          launchOptions.executablePath = path;
+          console.log(`Using Chrome at: ${path}`);
+          break;
+        }
+      }
+      
+      if (!launchOptions.executablePath) {
+        console.log('⚠️ Chrome not found at common paths, using default');
+      }
     }
 
     browser = await puppeteer.launch(launchOptions);
