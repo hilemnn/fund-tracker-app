@@ -1,0 +1,117 @@
+.not-found-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.not-found-content {
+  text-align: center;
+  background: white;
+  padding: 50px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+}
+
+.not-found-icon {
+  font-size: 8rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  line-height: 1;
+}
+
+.not-found-content h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin: 20px 0;
+  font-weight: 700;
+}
+
+.not-found-content p {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 20px 0 40px 0;
+  line-height: 1.6;
+}
+
+.not-found-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.home-btn,
+.admin-btn {
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.home-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.home-btn:hover {
+  background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+.admin-btn {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  color: white;
+}
+
+.admin-btn:hover {
+  background: linear-gradient(135deg, #5a32a3 0%, #4c2a91 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(111, 66, 193, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .not-found-content {
+    padding: 40px 30px;
+  }
+  
+  .not-found-icon {
+    font-size: 6rem;
+  }
+  
+  .not-found-content h1 {
+    font-size: 2rem;
+  }
+  
+  .not-found-content p {
+    font-size: 1.1rem;
+  }
+  
+  .not-found-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .home-btn,
+  .admin-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+}
