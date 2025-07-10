@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from './Header';
 import Login from './Login';
@@ -51,7 +51,7 @@ function App() {
     localStorage.removeItem('isAdminLoggedIn');
     setIsLoggedIn(false);
     // Navigate to home page after logout
-    window.location.href = '/';
+    window.location.href = '/#/';
   };
 
   // Borç hesaplamaları
@@ -169,7 +169,7 @@ function App() {
                     <div className="add-fund-section">
                       <button 
                         className="add-fund-button"
-                        onClick={() => window.location.href = '/admin'}
+                        onClick={() => window.location.href = '/#/admin'}
                       >
                         ➕ Fon Ekle
                       </button>
