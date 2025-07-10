@@ -10,7 +10,18 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors()); // Basit CORS - tüm origin'lere izin ver
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -750,11 +761,13 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  res.header('Access-Control-Allow-Origin', '*');
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
   res.status(404).json({ message: 'Route not found' });
 });
 
