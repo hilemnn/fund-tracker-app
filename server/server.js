@@ -758,15 +758,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Access the API at: http://localhost:${PORT}`);
-});
-
-module.exports = app;
-
-// Delete transaction
+// Delete transaction - Bu route app.listen()'den ÖNCE olmalı
 app.delete('/api/transactions/:id', async (req, res) => {
   console.log('═══ DELETE TRANSACTION İSTEĞİ ALINDI ═══');
   console.log('Timestamp:', new Date().toISOString());
@@ -865,3 +857,17 @@ app.delete('/api/transactions', async (req, res) => {
     });
   }
 });
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Access the API at: http://localhost:${PORT}`);
+});
+
+module.exports = app;
