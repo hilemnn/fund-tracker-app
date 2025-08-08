@@ -1,4 +1,3 @@
-// Vercel Serverless Function: /api/funds/index.js
 const mongoose = require('mongoose');
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -35,8 +34,18 @@ const fundSchema = new mongoose.Schema({
 
 const Fund = mongoose.models.Fund || mongoose.model('Fund', fundSchema);
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   await dbConnect();
+  
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method === 'GET') {
     try {
       const funds = await Fund.find().sort({ createdAt: -1 });

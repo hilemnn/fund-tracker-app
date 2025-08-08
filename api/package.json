@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "API for Fund Tracker App",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
