@@ -32,7 +32,20 @@ const fundSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const transactionSchema = new mongoose.Schema({
+  fundId: { type: String, required: true },
+  fundName: { type: String, required: true },
+  amount: { type: Number, required: true },
+  previousAmount: { type: Number, default: 0 },
+  type: { type: String, enum: ['INCREASE', 'DECREASE'], required: true },
+  date: { type: Date, default: Date.now },
+  description: { type: String, default: '' },
+  operation: { type: String, required: true },
+  newAmount: { type: Number, required: true }
+});
+
 const Fund = mongoose.models.Fund || mongoose.model('Fund', fundSchema);
+const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
 
 export default async function handler(req, res) {
   // CORS headers
@@ -99,8 +112,24 @@ export default async function handler(req, res) {
         { new: true, runValidators: true }
       );
       
+      // Transaction kaydı oluştur
+      const transactionData = {
+        fundId: fundId,
+        fundName: currentFund.name,
+        amount: Math.abs(newAmount - currentAmount), // İşlem miktarı (pozitif)
+        previousAmount: currentAmount,
+        type: newAmount > currentAmount ? 'INCREASE' : 'DECREASE',
+        operation: operationStr,
+        newAmount: newAmount,
+        description: `Payable amount updated: ${operationStr}`
+      };
+      
+      const transaction = new Transaction(transactionData);
+      await transaction.save();
+      
       res.status(200).json({
-        ...updatedFund.toObject(),
+        fund: updatedFund.toObject(),
+        transaction: transaction.toObject(),
         operation: operationStr,
         previousAmount: currentAmount,
         newAmount: newAmount

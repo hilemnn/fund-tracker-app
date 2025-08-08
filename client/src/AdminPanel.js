@@ -265,14 +265,16 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
       // Özel payable update endpoint'ini kullan (v2)
       const response = await axios.post('/api/update-payable', requestData);
       
-      if (response.data.operation) {
+      if (response.data.operation && response.data.transaction) {
+        alert(`İşlem başarılı: ${response.data.operation}\nÖnceki: ${response.data.previousAmount}\nYeni: ${response.data.newAmount}\nTransaction ID: ${response.data.transaction._id}`);
+      } else if (response.data.operation) {
         alert(`İşlem başarılı: ${response.data.operation}\nÖnceki: ${response.data.previousAmount}\nYeni: ${response.data.newAmount}`);
       } else if (response.data.message) {
         alert(response.data.message);
       }
       
       handleClosePayableModal();
-      window.location.reload(); // Sayfayı yenile
+      window.location.reload(); // Sayfayı yenile (funds ve transactions güncellenecek)
     } catch (error) {
       console.error('Error updating payable amount:', error);
       if (error.response && error.response.data && error.response.data.message) {
