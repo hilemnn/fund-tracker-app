@@ -57,8 +57,14 @@ function App() {
     let paidDebt = 0;
     
     funds.forEach(fund => {
-      // Fiyatı sayıya çevir (TL kısmını kaldır)
-      const price = parseFloat(fund.price.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      // Fiyatı sayıya çevir - hem string hem de number formatını destekle
+      let price = 0;
+      if (typeof fund.price === 'string') {
+        price = parseFloat(fund.price.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      } else {
+        price = parseFloat(fund.price) || 0;
+      }
+      
       const totalAmount = parseFloat(fund.totalAmount) || 0;
       const paidAmount = parseFloat(fund.payableAmount) || 0;
       
@@ -181,7 +187,7 @@ function App() {
                               funds.map((fund) => (
                                 <tr key={fund._id}>
                                   <td>{fund.name}</td>
-                                  <td>{fund.price}</td>
+                                  <td>{typeof fund.price === 'number' ? `${fund.price.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL` : fund.price}</td>
                                   <td>{fund.totalAmount}</td>
                                   <td>{fund.payableAmount}</td>
                                 </tr>
