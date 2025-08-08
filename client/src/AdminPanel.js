@@ -255,9 +255,9 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
     if (!selectedFund || !payableOperation.trim()) return;
 
     try {
-      // Yeni payable endpoint'ini kullan
-      const response = await axios.put(`/api/funds/${selectedFund._id}/payable`, {
-        operation: payableOperation.trim()
+      // /api/funds/[id] endpoint'ini payable için kullan
+      const response = await axios.put(`/api/funds/${selectedFund._id}?payable=true`, {
+        payableAmount: payableOperation.trim()
       });
       
       if (response.data.message) {

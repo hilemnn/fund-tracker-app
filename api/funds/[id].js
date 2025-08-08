@@ -47,10 +47,10 @@ export default async function handler(req, res) {
   }
   
   const { id } = req.query;
-  const url = req.url || '';
+  const { payable } = req.query;
   
   // Check if this is a payable amount update request
-  const isPayableRequest = url.includes('/payable');
+  const isPayableRequest = payable === 'true';
   
   try {
     switch (req.method) {
