@@ -47,6 +47,10 @@ export default async function handler(req, res) {
   }
   
   const { id } = req.query;
+  const url = req.url || '';
+  
+  // Check if this is a payable amount update request
+  const isPayableRequest = url.includes('/payable');
   
   try {
     switch (req.method) {
@@ -85,12 +89,24 @@ export default async function handler(req, res) {
         break;
         
       case 'PUT':
-        // Fund güncelle
         if (!id) {
           return res.status(400).json({ message: 'Fund ID is required' });
         }
         
-        const updateData = req.body;
+        let updateData;
+        
+        if (isPayableRequest) {
+          // Sadece payableAmount güncelle
+          const { payableAmount } = req.body;
+          if (payableAmount === undefined || payableAmount === null) {
+            return res.status(400).json({ message: 'payableAmount is required' });
+          }
+          updateData = { payableAmount: payableAmount.toString() };
+        } else {
+          // Tüm fund bilgilerini güncelle
+          updateData = req.body;
+        }
+        
         const updatedFund = await Fund.findByIdAndUpdate(
           id, 
           updateData, 

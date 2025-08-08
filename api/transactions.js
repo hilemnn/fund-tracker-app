@@ -25,8 +25,7 @@ async function dbConnect() {
 
 const transactionSchema = new mongoose.Schema({
   fundId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Fund',
+    type: String,
     required: true
   },
   fundName: {
@@ -74,7 +73,6 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // Tüm transaction'ları getir, en yeni önce
       const transactions = await Transaction.find()
-        .populate('fundId', 'name type')
         .sort({ date: -1 })
         .limit(50); // Son 50 işlem
       
