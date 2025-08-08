@@ -12,8 +12,6 @@ import './App.css';
 axios.defaults.baseURL = API_BASE_URL;
 
 function App() {
-  const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState({ title: '', description: '' });
   const [message, setMessage] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [funds, setFunds] = useState([]);
@@ -97,21 +95,6 @@ function App() {
       console.error('Error adding fund:', error);
       setMessage('Fon eklenirken hata oluştu');
       setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  // Fetch items from the server
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const fetchItems = async () => {
-    try {
-      const response = await axios.get('/api/items');
-      setItems(response.data);
-    } catch (error) {
-      console.error('Error fetching items:', error);
-      setMessage('Sunucudan veri alınırken hata oluştu');
     }
   };
 
