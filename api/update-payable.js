@@ -121,7 +121,8 @@ export default async function handler(req, res) {
         type: newAmount > currentAmount ? 'INCREASE' : 'DECREASE',
         operation: operationStr,
         newAmount: newAmount,
-        description: `Payable amount updated: ${operationStr}`
+        description: `Payable amount updated: ${operationStr}`,
+        date: new Date() // Açıkça tarih set et
       };
       
       const transaction = new Transaction(transactionData);

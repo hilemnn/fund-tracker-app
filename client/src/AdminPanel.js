@@ -725,7 +725,16 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
                         </div>
                         <div className="transaction-actions">
                           <div className="transaction-date">
-                            {new Date(transaction.createdAt).toLocaleString('tr-TR')}
+                            {transaction.date ? 
+                              new Date(transaction.date).toLocaleString('tr-TR', {
+                                year: 'numeric',
+                                month: '2-digit', 
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) : 
+                              'Tarih yok'
+                            }
                           </div>
                           <button 
                             onClick={() => {
