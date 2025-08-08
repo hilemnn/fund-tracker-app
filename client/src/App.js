@@ -109,7 +109,6 @@ function App() {
     try {
       const response = await axios.get('/api/items');
       setItems(response.data);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching items:', error);
       setMessage('Sunucudan veri alınırken hata oluştu');
