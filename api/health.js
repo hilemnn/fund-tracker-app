@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -7,10 +7,9 @@ export default function handler(req, res) {
     return res.status(200).end();
   }
 
-  res.json({ 
+  res.status(200).json({ 
     status: 'OK', 
-    message: 'Backend API is running on Vercel serverless',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production'
+    message: 'API is working',
+    timestamp: new Date().toISOString()
   });
-}
+};
