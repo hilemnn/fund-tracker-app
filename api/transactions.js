@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { handleCors } from './_lib/cors.js';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -57,17 +58,8 @@ const transactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   await dbConnect();
-  
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
   
   try {
     if (req.method === 'GET') {
@@ -116,3 +108,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export default handleCors(handler);

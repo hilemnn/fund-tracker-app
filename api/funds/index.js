@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { handleCors } from '../_lib/cors.js';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -34,17 +35,8 @@ const fundSchema = new mongoose.Schema({
 
 const Fund = mongoose.models.Fund || mongoose.model('Fund', fundSchema);
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   await dbConnect();
-  
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
   
   if (req.method === 'GET') {
     try {
@@ -57,3 +49,5 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
   }
 }
+
+export default handleCors(handler);
