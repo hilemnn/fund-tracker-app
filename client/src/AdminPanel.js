@@ -341,17 +341,44 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
     if (window.confirm('Tüm fon ve hisse fiyatları güncellenecek. Bu işlem birkaç dakika sürebilir. Devam etmek istiyor musunuz?')) {
       setIsUpdatingPrices(true);
       try {
-        await axios.post('/api/update-fund-prices');
+        console.log('Fiyat güncelleme başlatılıyor...');
+        const response = await axios.post('/api/update-fund-prices');
         
         // Güncelleme zamanını kaydet
         const updateTime = new Date();
         setLastUpdateTime(updateTime);
         localStorage.setItem('lastPriceUpdate', updateTime.toISOString());
         
-        alert('Fiyat güncelleme işlemi başlatıldı. Birkaç dakika sonra sayfayı yenileyin.');
+        // Sonuçları göster
+        if (response.data.success) {
+          const { results } = response.data;
+          const successCount = results.filter(r => r.status === 'Updated').length;
+          const errorCount = results.filter(r => r.status === 'Error').length;
+          const notFoundCount = results.filter(r => r.status === 'Not found').length;
+          
+          let message = `Fiyat güncelleme tamamlandı!\n\n`;
+          message += `✅ Güncellenen: ${successCount}\n`;
+          if (notFoundCount > 0) message += `⚠️ Bulunamayan: ${notFoundCount}\n`;
+          if (errorCount > 0) message += `❌ Hatalı: ${errorCount}\n`;
+          
+          message += `\nDetaylar:\n`;
+          results.forEach(r => {
+            const icon = r.status === 'Updated' ? '✅' : r.status === 'Error' ? '❌' : '⚠️';
+            message += `${icon} ${r.name}: ${r.price}\n`;
+          });
+          
+          alert(message);
+          window.location.reload(); // Sayfayı yenile
+        } else {
+          alert(`Fiyat güncelleme hatası: ${response.data.error}`);
+        }
       } catch (error) {
         console.error('Error updating prices:', error);
-        alert('Fiyat güncelleme işlemi başlatılırken hata oluştu.');
+        if (error.response && error.response.data) {
+          alert(`Fiyat güncelleme hatası: ${error.response.data.details || error.response.data.error}`);
+        } else {
+          alert('Fiyat güncelleme işlemi başlatılırken hata oluştu.');
+        }
       } finally {
         setIsUpdatingPrices(false);
       }
