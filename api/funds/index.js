@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/funds/index.js
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -35,7 +35,7 @@ const fundSchema = new mongoose.Schema({
 
 const Fund = mongoose.models.Fund || mongoose.model('Fund', fundSchema);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await dbConnect();
   if (req.method === 'GET') {
     try {
