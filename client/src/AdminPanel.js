@@ -255,11 +255,15 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
     if (!selectedFund || !payableOperation.trim()) return;
 
     try {
-      // Özel payable update endpoint'ini kullan (v2)
-      const response = await axios.post('/api/update-payable', {
+      const requestData = {
         fundId: selectedFund._id,
         operation: payableOperation.trim()
-      });
+      };
+      
+      console.log('Gönderilen veri:', requestData);
+      
+      // Özel payable update endpoint'ini kullan (v2)
+      const response = await axios.post('/api/update-payable', requestData);
       
       if (response.data.operation) {
         alert(`İşlem başarılı: ${response.data.operation}\nÖnceki: ${response.data.previousAmount}\nYeni: ${response.data.newAmount}`);
