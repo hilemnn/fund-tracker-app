@@ -97,7 +97,7 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
           console.log('Database\'den güncel listeyi alıyor...');
           await fetchTransactions();
           
-          alert(`İşlem kaydı başarıyla silindi!\nDatabase\'de kalan kayıt: ${response.data.remainingCount || 'Bilinmiyor'}`);
+          alert(`İşlem kaydı başarıyla silindi!\nDatabase'de kalan kayıt: ${response.data.remainingCount || 'Bilinmiyor'}`);
         } else {
           throw new Error(`Beklenmeyen yanıt: ${response.status}`);
         }

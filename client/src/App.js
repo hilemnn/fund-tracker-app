@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import Header from './Header';
 import Login from './Login';
@@ -14,7 +14,6 @@ axios.defaults.baseURL = API_BASE_URL;
 function App() {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({ title: '', description: '' });
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [funds, setFunds] = useState([]);
@@ -114,35 +113,6 @@ function App() {
     } catch (error) {
       console.error('Error fetching items:', error);
       setMessage('Sunucudan veri alınırken hata oluştu');
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!newItem.title.trim()) return;
-
-    try {
-      const response = await axios.post('/api/items', newItem);
-      setItems([...items, response.data]);
-      setNewItem({ title: '', description: '' });
-      setMessage('Borç başarıyla eklendi!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      console.error('Error adding item:', error);
-      setMessage('Borç eklenirken hata oluştu');
-    }
-  };
-
-  const deleteItem = async (id) => {
-    try {
-      await axios.delete(`/api/items/${id}`);
-      setItems(items.filter(item => item._id !== id));
-      setMessage('Borç başarıyla silindi!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      setMessage('Borç silinirken hata oluştu');
     }
   };
 
