@@ -255,8 +255,9 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
     if (!selectedFund || !payableOperation.trim()) return;
 
     try {
-      // Sadece normal PUT request ile payableAmount güncelle
-      const response = await axios.put(`/api/funds/${selectedFund._id}`, {
+      // Özel payable update endpoint'ini kullan
+      const response = await axios.post('/api/update-payable', {
+        fundId: selectedFund._id,
         payableAmount: payableOperation.trim()
       });
       
