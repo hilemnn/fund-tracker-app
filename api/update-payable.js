@@ -49,25 +49,62 @@ export default async function handler(req, res) {
   
   if (req.method === 'POST') {
     try {
-      const { fundId, payableAmount } = req.body;
+      const { fundId, operation } = req.body;
       
-      if (!fundId || payableAmount === undefined) {
+      if (!fundId || !operation) {
         return res.status(400).json({ 
-          message: 'fundId and payableAmount are required' 
+          message: 'fundId and operation are required' 
         });
       }
       
-      const updatedFund = await Fund.findByIdAndUpdate(
-        fundId, 
-        { payableAmount: payableAmount.toString() }, 
-        { new: true, runValidators: true }
-      );
-      
-      if (!updatedFund) {
+      // Önce mevcut fund'ı getir
+      const currentFund = await Fund.findById(fundId);
+      if (!currentFund) {
         return res.status(404).json({ message: 'Fund not found' });
       }
       
-      res.status(200).json(updatedFund);
+      // Mevcut payableAmount'u al
+      const currentAmount = parseFloat(currentFund.payableAmount) || 0;
+      
+      // Operation'ı parse et (+5, -3, 5 vs.)
+      let newAmount;
+      const operationStr = operation.toString().trim();
+      
+      if (operationStr.startsWith('+')) {
+        // +5 -> mevcut değere ekle
+        const addValue = parseFloat(operationStr.substring(1));
+        newAmount = currentAmount + addValue;
+      } else if (operationStr.startsWith('-')) {
+        // -3 -> mevcut değerden çıkar
+        const subtractValue = parseFloat(operationStr.substring(1));
+        newAmount = currentAmount - subtractValue;
+      } else {
+        // 5 -> pozitif sayı, otomatik ekle
+        const addValue = parseFloat(operationStr);
+        if (isNaN(addValue)) {
+          return res.status(400).json({ 
+            message: 'Invalid operation format. Use +5, -3, or 5' 
+          });
+        }
+        newAmount = currentAmount + addValue;
+      }
+      
+      // Negatif değerleri 0'a sınırla
+      if (newAmount < 0) newAmount = 0;
+      
+      // Fund'ı güncelle
+      const updatedFund = await Fund.findByIdAndUpdate(
+        fundId, 
+        { payableAmount: newAmount.toString() }, 
+        { new: true, runValidators: true }
+      );
+      
+      res.status(200).json({
+        ...updatedFund.toObject(),
+        operation: operationStr,
+        previousAmount: currentAmount,
+        newAmount: newAmount
+      });
     } catch (error) {
       console.error('Payable Update Error:', error);
       res.status(500).json({ 

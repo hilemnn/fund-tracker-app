@@ -258,10 +258,12 @@ const AdminPanel = ({ onLogout, funds, onAddFund }) => {
       // Özel payable update endpoint'ini kullan (v2)
       const response = await axios.post('/api/update-payable', {
         fundId: selectedFund._id,
-        payableAmount: payableOperation.trim()
+        operation: payableOperation.trim()
       });
       
-      if (response.data.message) {
+      if (response.data.operation) {
+        alert(`İşlem başarılı: ${response.data.operation}\nÖnceki: ${response.data.previousAmount}\nYeni: ${response.data.newAmount}`);
+      } else if (response.data.message) {
         alert(response.data.message);
       }
       
