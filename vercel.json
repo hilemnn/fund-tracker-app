@@ -7,13 +7,17 @@
       "config": {
         "distDir": "build"
       }
-    },
-    {
-      "src": "api/*.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/health",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/api/funds",
+      "dest": "/api/index.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"

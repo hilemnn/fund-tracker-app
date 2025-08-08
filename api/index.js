@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
 
 const app = express();
 
@@ -15,7 +14,7 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-// MongoDB connection
+// MongoDB connection with caching for serverless
 let cachedConnection = null;
 
 async function connectToDatabase() {
@@ -23,10 +22,15 @@ async function connectToDatabase() {
     return cachedConnection;
   }
 
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:admin123@cluster0.mongodb.net/fundtracker?retryWrites=true&w=majority';
+
   try {
-    const connection = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fullstack', {
+    const connection = await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 1,
+      bufferCommands: false,
     });
     
     cachedConnection = connection;
@@ -48,15 +52,21 @@ const fundSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }, { collection: 'funds' });
 
-const Fund = mongoose.model('Fund', fundSchema);
+// Prevent model recompilation in serverless environment
+let Fund;
+try {
+  Fund = mongoose.model('Fund');
+} catch {
+  Fund = mongoose.model('Fund', fundSchema);
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
-    message: 'Server is running',
+    message: 'API is running on Vercel serverless',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'production'
   });
 });
 
@@ -68,7 +78,7 @@ app.get('/api/funds', async (req, res) => {
     res.json(funds);
   } catch (error) {
     console.error('Error fetching funds:', error);
-    res.status(500).json({ error: 'Fonlar getirilirken hata oluştu' });
+    res.status(500).json({ error: 'Fonlar getirilirken hata oluştu', details: error.message });
   }
 });
 
@@ -95,7 +105,7 @@ app.post('/api/funds', async (req, res) => {
     res.status(201).json(savedFund);
   } catch (error) {
     console.error('Error adding fund:', error);
-    res.status(500).json({ error: 'Fon eklenirken hata oluştu' });
+    res.status(500).json({ error: 'Fon eklenirken hata oluştu', details: error.message });
   }
 });
 
@@ -116,7 +126,7 @@ app.put('/api/funds/:id', async (req, res) => {
     res.json(updatedFund);
   } catch (error) {
     console.error('Error updating fund:', error);
-    res.status(500).json({ error: 'Fon güncellenirken hata oluştu' });
+    res.status(500).json({ error: 'Fon güncellenirken hata oluştu', details: error.message });
   }
 });
 
@@ -135,9 +145,11 @@ app.delete('/api/funds/:id', async (req, res) => {
     res.json({ message: 'Fon başarıyla silindi', deletedFund });
   } catch (error) {
     console.error('Error deleting fund:', error);
-    res.status(500).json({ error: 'Fon silinirken hata oluştu' });
+    res.status(500).json({ error: 'Fon silinirken hata oluştu', details: error.message });
   }
 });
 
-// Export for Vercel
-module.exports = app;
+// Export handler for Vercel
+module.exports = (req, res) => {
+  return app(req, res);
+};
