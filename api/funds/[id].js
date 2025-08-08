@@ -39,10 +39,6 @@ async function handler(req, res) {
   await dbConnect();
   
   const { id } = req.query;
-  const { payable } = req.query;
-  
-  // Check if this is a payable amount update request
-  const isPayableRequest = payable === 'true';
   
   try {
     switch (req.method) {
@@ -85,19 +81,8 @@ async function handler(req, res) {
           return res.status(400).json({ message: 'Fund ID is required' });
         }
         
-        let updateData;
-        
-        if (isPayableRequest) {
-          // Sadece payableAmount güncelle
-          const { payableAmount } = req.body;
-          if (payableAmount === undefined || payableAmount === null) {
-            return res.status(400).json({ message: 'payableAmount is required' });
-          }
-          updateData = { payableAmount: payableAmount.toString() };
-        } else {
-          // Tüm fund bilgilerini güncelle
-          updateData = req.body;
-        }
+        // Tüm fund bilgilerini güncelle (payableAmount dahil)
+        const updateData = req.body;
         
         const updatedFund = await Fund.findByIdAndUpdate(
           id, 
