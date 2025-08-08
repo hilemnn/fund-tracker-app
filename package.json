@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Full-stack web application with React.js, Node.js, Express, and MongoDB",
   "main": "index.js",
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd server && npm run dev",
